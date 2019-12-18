@@ -52,6 +52,22 @@ void SearchBTree(BTree t, int k, result& r) {
         r = { q,i,0 };
     }
 }
+//调整父结点
+void ParentAdjust(BTNode* p)
+{
+    if (p != NULL)
+    {
+        for (int i = 0;i <= p->keynum;i++)
+        {
+            if (p->ptr[i] != NULL)
+            {
+                p->ptr[i]->parent = p;
+                ParentAdjust(p->ptr[i]);
+            }
+        }
+    }
+};
+
 void split(BTree& q, int s, BTree& ap) {//将q结点分裂成两个结点，前一半保留在原结点，后一半移入ap所指新结点
     int i, j, n = q->keynum;
     ap = (BTNode*)malloc(sizeof(BTNode));//生成新结点
@@ -65,6 +81,9 @@ void split(BTree& q, int s, BTree& ap) {//将q结点分裂成两个结点，前�
     for (i = 0;i <= n - s;i++)
         if (ap->ptr[i] != NULL) ap->ptr[i]->parent = ap;
     q->keynum = s - 1;
+    ParentAdjust(q);
+    ParentAdjust(ap);
+
 }
 void newRoot(BTree& t, BTree p, int x, BTree ap) {//生成新的根结点
     t = (BTNode*)malloc(sizeof(BTNode));
@@ -203,7 +222,7 @@ void Restore(BTree& p, int i, BTree& T) {//对B树进行调整
             p->ptr[1] = p->ptr[0]; //将p结点剩余的指针继续右移
  
             p->ptr[0] = lc->ptr[lc->keynum];//从左兄弟右移一个指针,并不使用
-            //ap->ptr[r] = lc;//指针指向合并后要保留的结点，然并卵
+            ap->ptr[r] = lc;//指针指向合并后要保留的结点
             for (j = 1;j <= lc->keynum + p->keynum;j++) //将结点p中关键字和指针移到p左兄弟中
             {
                 lc->key[lc->keynum + j] = p->key[j];
@@ -212,6 +231,7 @@ void Restore(BTree& p, int i, BTree& T) {//对B树进行调整
             //修改p中的子女的父结点为lc          
             for (j = 1;j <= p->keynum;j++)//p->ptr[0]和 lc->ptr[lc->keynum]相同，不考虑          
                 if (lc->ptr[lc->keynum + j])   lc->ptr[lc->keynum + j]->parent = lc;
+            //p结点的父指针指向父结点？       
      
             lc->keynum = lc->keynum + p->keynum;  //合并后关键字的个数
             for (j = r;j < ap->keynum;j++)//将父结点中关键字和指针左移
@@ -224,7 +244,7 @@ void Restore(BTree& p, int i, BTree& T) {//对B树进行调整
             pr = NULL;
             p = lc;
         }
-        if (r < ap->keynum && (ap->ptr[r + 1]->keynum <= (m - 1) / 2)) //与右兄弟合并
+        else//与右兄弟合并
         {
             rc = ap->ptr[r + 1];
             if (r == 0)
@@ -233,7 +253,7 @@ void Restore(BTree& p, int i, BTree& T) {//对B树进行调整
             p->key[p->keynum] = ap->key[r]; //父结点的关键字与p合并
             p->ptr[p->keynum] = rc->ptr[0]; //从右兄弟左移一个指针
             rc->keynum = p->keynum + rc->keynum;//合并后关键字的个数
-            //ap->ptr[r - 1] = rc;//多余？无用！指针改指向合并后指向的结点
+            ap->ptr[r - 1] = rc;//多余？无用！指针改指向合并后指向的结点
             for (j = 1;j <= (rc->keynum - p->keynum);j++)//将p右兄弟关键字和指针右移
             {
                 rc->key[p->keynum + j] = rc->key[j];
@@ -295,6 +315,7 @@ void show_Btree(BTree& p)
     {
         if (i == 1);
         else printf(" ");
+
         printf("%d", p->key[i]);
     }
     printf("]");
@@ -348,6 +369,9 @@ void creat_btree()
     T->keynum = 0;
     cout<<"New success" << endl;
 }
+
+
+
 void insert_keytype()
 {
     cout<<"Enter an element to be inserted" << endl;
