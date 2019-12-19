@@ -1,1 +1,3 @@
-﻿LINK : fatal error LNK1168: 无法打开 C:\Users\dell\Desktop\图书管理系统\tuahuguanlixit\B树样板2\B树样板2\Debug\B树样板2.exe 进行写入
+﻿  main.cpp
+C:\Users\dell\Desktop\图书管理系统\tuahuguanlixit\B树样板2\B树样板2\BTree.h(75,2): warning C4091: “typedef ”: 没有声明变量时忽略“broow”的左侧
+  B树样板2.vcxproj -> C:\Users\dell\Desktop\图书管理系统\tuahuguanlixit\B树样板2\B树样板2\Debug\B树样板2.exe

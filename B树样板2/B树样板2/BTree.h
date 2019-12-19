@@ -34,6 +34,7 @@ typedef struct BTNode {
     struct BTNode* parent;  //Ë«Ç×½áµãÖ¸Õë
     struct BTNode* ptr[m + 1]; //º¢×Ó½áµãÖ¸ÕëÊý×é
     Record* recptr[m + 1];
+    
     BTNode() {
         keynum = 0;
         parent = NULL;
@@ -45,24 +46,49 @@ typedef struct BTNode {
     }
 }BTNode, * BTree;
 
-BTree T = NULL;
+BTree T = NULL;//È«¾Ö±äÁ¿
+
+
 typedef struct {
     BTree pt;               //Ö¸ÏòÕÒµ½µÄ½áµã
     int i;                  //1<=i<=m,ÔÚ½áµãÖÐµÄ¹Ø¼ü×ÖÎ»Ðò
     int tag;                //1£º²éÕÒ³É¹¦£¬0£º²éÕÒÊ§°Ü
 }result;                    //BÊ÷µÄ²éÕÒ½á¹ûÀàÐÍ
 
+typedef struct date {
+    int year;
+    int month;
+    int day;
+    date() {
+        year = 2019;
+        month = 12;
+        day = 19;
+    }
+}date;
+
+typedef struct broow {
+    int broow_id;
+    date date;
+    broow() {
+        broow_id = 0;
+    }
+};
+
+
 int Search(BTree p, int k);
 void SearchBTree(BTree t, int k, result& r);
+
 void ParentAdjust(BTNode* p);
-void split(BTree& q, int s, BTree& ap);
-void newRoot(BTree& t, BTree p, int x, BTree ap);
-void Insert(BTree& q, int i, int x, BTree ap);
-void InsertBTree(BTree& t, int k, BTree q, int i);
+void split(BTree& q, int s, BTree& ap, Book* b);
+void newRoot(BTree& t, BTree p, int x, BTree ap, Book* b);
+void Insert(BTree& q, int i, int x, BTree ap, Book* b);
+void InsertBTree(BTree& t, int k, BTree q, int i,Book* b);
+
 void Remove(BTree& p, int i);
 void Successor(BTree& p, int i);
 void Restore(BTree& p, int i, BTree& T);
 void DeleteBTree(BTree& p, int i, BTree& T);
+
 void show_Btree(BTree& p);
 void show_Btree2(BTree& p, int deep);
 void Destory(BTree& t);
@@ -71,40 +97,121 @@ void insert_keytype();
 void find_keytype();
 void delete_keytype();
 
-void book_insert(KeyType temp, Book* b);
+void book_insert(KeyType temp, Book* b,int k);
 void book_ruku();
 void book_show(Book* b);
 void book_delete(KeyType temp);
 void book_qingchu();
+void book_broow();
+void book_find(KeyType temp);
+void book_return();
+void RootFirst(BTree st, string ar);//²éÕÒ×÷ÕßËùÓÐµÄÖø×÷
 
 
-void book_insert(KeyType temp, Book* b)
+
+void RootFirst(BTree st,string ar)//Ç°Ðò²éÕÒ×÷ÕßµÄÐÅÏ¢
+{
+    if (st != NULL)
+    {
+        int n = st->keynum;      
+        for (int k = 1;k <= n;k++)       //Êä³öµ±Ç°½áµãµÄËùÓÐµÄ¹Ø¼üÂë
+            if (st->recptr[k]->auther == ar)
+            {               
+                book_find(st->recptr[k]->id);
+                cout << endl;
+            }
+        for (int i = 0;i <= n;i++)       //µÝ¹éÊä³öËùÓÐµÄ×ÓÊ÷
+            RootFirst(st->ptr[i],ar);
+    };
+}
+
+void book_author() {
+    cout << "ÇëÊäÈëÄãÒª²éÑ¯µÄÖøÕß£º" << endl;
+    string ar;
+    cin >> ar;
+    cout << "*Öø×÷ÐÅÏ¢ÈçÏÂ£º*" << endl << endl;
+    RootFirst(T, ar);
+    cout << "*²éÑ¯Íê³É*" << endl;
+
+}
+
+
+void book_return() {
+    cout << "ÇëÊäÈëÄãÒª¹é»¹µÄÊé¼®ºÅ¼°Í¼ÊéÖ¤ºÅ£º" << endl;
+    int temp;
+    broow bw;
+    cin >> temp >> bw.broow_id;
+    result q;
+    SearchBTree(T, temp, q);
+    if (q.tag == 0) cout << "Ã»ÓÐ½èÊéÕ¦»¹ÊéÄØ£¿£¿£¿" << endl;
+    else {
+        if (q.pt) q.pt->recptr[q.i]->pstock++;//ÏÖ´æÁ¿Ôö¼Ó   
+        cout << "Í¼ÊéÖ¤ºÅ£º" << bw.broow_id << endl << "Ó¦¹é»¹ÈÕÆÚ£º"
+            << bw.date.year << "Äê" << (bw.date.month + 1) % 12 << "ÔÂ" << (bw.date.day)%30 << "ÈÕ" << endl;
+        cout << "*¹é»¹³É¹¦*" << endl;
+        book_find(temp);
+    }
+
+
+}
+
+
+void book_broow() {
+    cout << "ÇëÊäÈëÄãÒª½èÔÄµÄÊé¼®ºÅ¡¢Í¼ÊéÖ¤ºÅ£º" << endl;
+    int temp;
+    broow bw;
+    cin >> temp>>bw.broow_id;
+    result q;
+    SearchBTree(T,temp,q);
+    if (q.tag == 0) cout << "Êé¼®²»´æÔÚÑ½£¡" << endl;
+    else {
+        
+        cout << "Í¼ÊéÖ¤ºÅ£º" << bw.broow_id << endl << "¹é»¹ÈÕÆÚ£º"
+            << bw.date.year<< "Äê" << (bw.date.month+1)%12 << "ÔÂ" << (bw.date.day) % 30 << "ÈÕ" << endl;
+        if (q.pt->recptr[q.i]->pstock > 0)
+        {
+            q.pt->recptr[q.i]->pstock--;//ÏÖ´æÁ¿¼õÉÙ
+           
+            cout << "*½èÔÄ³É¹¦*" << endl;
+        }
+        else cout << "*½èÔÄÊ§°Ü*" << endl << "¸ÃÊéÌ«ÇÀÊÖÀ²£¡£¡£¡" << endl;
+        book_find(temp);
+    }
+}
+
+void book_insert(KeyType temp, Book* b,int k)
 {                
-        result p;
+        result p,q;
         SearchBTree(T, temp, p);
         if (p.tag == 0)
         {
             
-            InsertBTree(T, temp,p.pt, p.i);
-            p.pt->recptr[p.i] = b;//°Ñ¼ÇÂ¼ÐÅÏ¢ºÍÊéºÅ¹ØÁªÆðÀ´,ÏÈ²åºó¹ØÁª
-            b->tstock++;
-            b->tstock++; 
+            InsertBTree(T, temp,p.pt, p.i,b);
+            
+            SearchBTree(T, temp, q);//²éÕÒÐÂ²åÈëÔªËØµÄ×îÐÂÎ»ÖÃ,²éÕÒ³É¹¦           
+            //q.pt->recptr[q.i] = b;//°Ñ¼ÇÂ¼ÐÅÏ¢ºÍÊéºÅ¹ØÁªÆðÀ´,ÏÈ²åºó¹ØÁª
+            
+            q.pt->recptr[q.i]->pstock+=k;
+            q.pt->recptr[q.i]->tstock+=k;
             cout << "*" << temp << "ºÅÊé¼®Èë¿â³É¹¦*" << endl ;
             cout << endl;
         }
         else
-        {
-            cout << "*Êé¼®ÒÑ´æÔÚÓÚBÊ÷ÖÐ*" << endl;
-            b->tstock++;
-            b->tstock++;
+        {    
+            SearchBTree(T, temp, q);//²éÕÒÐÂ²åÈëÔªËØµÄ×îÐÂÎ»ÖÃ
+            q.pt->recptr[q.i]->pstock+=k;
+            q.pt->recptr[q.i]->tstock+=k;
+            delete b;
+            cout << "*Êé¼®ÒÑ´æÔÚ¿âÖÐ*" << endl;
         }
 
 }
 void book_ruku() {
-    cout << "ÇëÊäÈëÒª²É±àÈë¿âµÄÊé¼®ÐÅÏ¢£¨ÊéºÅ¡¢ÊéÃû¡¢ÖøÕß£©£º" << endl;
-    Book* p = NULL;
-    cin >> p->id >> p->name >> p->auther;
-    book_insert(p->id,p);
+    cout << "ÇëÊäÈëÒª²É±àÈë¿âµÄÊé¼®ÐÅÏ¢£¨ÊéºÅ¡¢ÊéÃû¡¢ÖøÕß¡¢ÊýÁ¿£©£º" << endl;
+    Book* b = new Book;
+    int k;
+    cin >> b->id >> b->name >> b->auther>>k;
+    book_insert(b->id,b,k);
 }
 
 void book_delete(KeyType temp)
@@ -141,11 +248,11 @@ void book_find(KeyType temp)
     SearchBTree(T, temp, p);
     if (p.tag)
     {
-        cout << "*²éÕÒ³É¹¦*" << endl;
+        //cout << "*²éÕÒ³É¹¦*" << endl;
         book_show(p.pt->recptr[p.i]);
        // cout<<p.pt->recptr[p.i]<<endl;
     }
-    else cout << "Lookup failure" << endl;
+    else cout << "*²éÕÒÊ§°Ü*" << endl;
 }
 
 
@@ -226,17 +333,18 @@ void ParentAdjust(BTNode* p)
     }
 };
 
-void split(BTree& q, int s, BTree& ap) {//½«q½áµã·ÖÁÑ³ÉÁ½¸ö½áµã£¬Ç°Ò»°ë±£ÁôÔÚÔ­½áµã£¬ºóÒ»°ëÒÆÈëapËùÖ¸ÐÂ½áµã
+void split(BTree& q, int s, BTree& ap, Book* b) {//½«q½áµã·ÖÁÑ³ÉÁ½¸ö½áµã£¬Ç°Ò»°ë±£ÁôÔÚÔ­½áµã£¬ºóÒ»°ëÒÆÈëapËùÖ¸ÐÂ½áµã
     int i, j, n = q->keynum;
     ap = (BTNode*)malloc(sizeof(BTNode));//Éú³ÉÐÂ½áµã
     ap->ptr[0] = q->ptr[s];
     for (i = s + 1, j = 1;i <= n;i++, j++) {    //ºóÒ»°ëÒÆÈëap½áµã
         ap->key[j] = q->key[i];
-        ap->recptr[j] = q->recptr[j];
+        ap->recptr[j] = q->recptr[i];//TMDDDDDDDDD
         ap->ptr[j] = q->ptr[i];
     }
     ap->keynum = n - s;
     ap->parent = q->parent;
+
     for (i = 0;i <= n - s;i++)
         if (ap->ptr[i] != NULL) ap->ptr[i]->parent = ap;
     q->keynum = s - 1;
@@ -244,48 +352,67 @@ void split(BTree& q, int s, BTree& ap) {//½«q½áµã·ÖÁÑ³ÉÁ½¸ö½áµã£¬Ç°Ò»°ë±£ÁôÔÚÔ­½
     ParentAdjust(ap);
 
 }
-void newRoot(BTree& t, BTree p, int x, BTree ap) {//Éú³ÉÐÂµÄ¸ù½áµã
+void newRoot(BTree& t, BTree p, int x, BTree ap, Book* b) {//Éú³ÉÐÂµÄ¸ù½áµã
     t = (BTNode*)malloc(sizeof(BTNode));
-    t->keynum = 1;t->ptr[0] = p;t->ptr[1] = ap;
+    t->keynum = 1;
+    t->ptr[0] = p;t->ptr[1] = ap;
     t->key[1] = x;
+    t->recptr[1] = b;//¼ÇÂ¼¹ØÁª
    
     if (p != NULL) p->parent = t;
     if (ap != NULL) ap->parent = t;
     t->parent = NULL;
+    
 }
 
-void Insert(BTree& q, int i, int x, BTree ap) {//¹Ø¼ü×ÖxºÍÐÂ½áµãÖ¸Õëap·Ö±ð²åµ½q->key[i]ºÍq->ptr[i]
+void Insert(BTree& q, int i, int x, BTree ap, Book* b) {//¹Ø¼ü×ÖxºÍÐÂ½áµãÖ¸Õëap·Ö±ð²åµ½q->key[i]ºÍq->ptr[i]
     int j, n = q->keynum;
     for (j = n;j >= i;j--) {
         q->key[j + 1] = q->key[j];
         q->recptr[j + 1] = q->recptr[j];
         q->ptr[j + 1] = q->ptr[j];
     }
-    q->key[i] = x;q->ptr[i] = ap;
+    q->key[i] = x;
+    q->recptr[i] = b;
+    q->ptr[i] = ap;
     if (ap != NULL) ap->parent = q;
     q->keynum++;
 }
-void InsertBTree(BTree& t, int k, BTree q, int i) {
+void InsertBTree(BTree& t, int k, BTree q, int i,Book* b) {
     //ÔÚBÊ÷ÖÐq½áµãµÄkey[i-1]ºÍkey[i]Ö®¼ä²åÈë¹Ø¼ü×Ök
     //Èô²åÈëºó½áµã¹Ø¼ü×Ö¸öÊýµÈÓÚbÊ÷µÄ½×£¬ÔòÑØ×ÅË«Ç×Ö¸ÕëÁ´½øÐÐ½áµã·ÖÁÑ£¬Ê¹µÃtÈÔÊÇm½×BÊ÷
     int x, s, finished = 0, needNewRoot = 0;
     BTree ap;
-    if (NULL == q) newRoot(t, NULL, k, NULL);
+    if (NULL == q) newRoot(t, NULL, k, NULL,b);
     else {
         x = k;ap = NULL;
-        while (0 == needNewRoot && 0 == finished) {
-            Insert(q, i, x, ap);//xºÍap·Ö±ð²åµ½q->key[i]ºÍq->ptr[i]
+        Record* temp = b;
+        while (0 == needNewRoot && 0 == finished) 
+        {
+            Insert(q, i, x, ap,temp);//xºÍap·Ö±ð²åµ½q->key[i]ºÍq->ptr[i]
+            //q->recptr[i] = temp;
             if (q->keynum < m) finished = 1;//²åÈëÍê³É
             else {
-                s = (m + 1) / 2;split(q, s, ap);x = q->key[s];
+                s = (m + 1) / 2;//ÖÐµãÍùÉÏÌá
+                x = q->key[s];//ÏÂ´ÎÑ­»·Ê±²åÈë¸¸½áµãÖÐ
+                temp=q->recptr[s];
+                
+                split(q, s, ap,b);             
                 if (q->parent != NULL) {
-                    q = q->parent;i = Search(q, x);//ÔÚË«Ç×½áµãÖÐ²éÕÒxµÄ²åÈëÎ»ÖÃ
+                    q = q->parent;//½áµãÉÏÒÆ
+                    i = Search(q, x);//ÔÚË«Ç×½áµãÖÐ²éÕÒxµÄ²åÈëÎ»ÖÃ
                 }
-                else needNewRoot = 1;
+                else
+                {
+                    needNewRoot = 1;//tÊÇ¿ÕÊ÷»òÕß¸ù½áµãÒÑ¾­·ÖÁÑ³ÉÎªqºÍap½áµã
+                    newRoot(t, q, x, ap,temp);          
+                
+                }
+                
             }
-        }
-        if (1 == needNewRoot)//tÊÇ¿ÕÊ÷»òÕß¸ù½áµãÒÑ¾­·ÖÁÑ³ÉÎªqºÍap½áµã
-            newRoot(t, q, x, ap);
+        }       
+
+           
     }
 }
 void Remove(BTree& p, int i)
@@ -535,7 +662,7 @@ void Destory(BTree& t)
         {
             Destory(t->ptr[i]);
             free(t->ptr[i]);
-            free(t->recptr[i]);
+     
             i++;
         }
     }
@@ -563,7 +690,7 @@ void insert_keytype()
         SearchBTree(T, temp, p);
         if (p.tag == 0)
         {
-            InsertBTree(T, temp, p.pt, p.i);
+            InsertBTree(T, temp, p.pt, p.i,NULL);
             cout << "*" << temp << "²åÈë³É¹¦*" << endl<<"B-Tree£º";show_Btree(T);
             cout <<endl;
         }
